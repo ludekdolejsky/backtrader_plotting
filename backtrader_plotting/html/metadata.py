@@ -3,7 +3,7 @@ import inspect
 import markdown2
 
 import backtrader as bt
-
+import math
 from backtrader_plotting.utils import get_params, paramval2str
 
 
@@ -36,8 +36,8 @@ def _get_datas(strategy: bt.Strategy) -> str:
         data = {
             'DataName:': str(data._dataname).replace("|", "\\|"),
             'Timezone:': data._tz,
-            'Time From:': bt.num2date(data.fromdate),
-            'Time To:': bt.num2date(data.todate),
+            'Time From:': bt.num2date(data.fromdate) if not math.isinf(data.fromdate) else "",
+            'Time To:': bt.num2date(data.todate) if not math.isinf(data.todate) else "",
             'Number of bars:': len(data),
             'Bar Length:': f"{data._compression} {bt.TimeFrame.getname(data._timeframe, data._compression)}",
         }

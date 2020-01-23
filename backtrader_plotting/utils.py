@@ -25,6 +25,8 @@ def paramval2str(name, value):
         return ','.join(value)
     elif isinstance(value, type):
         return value.__name__
+    elif isinstance(value, object):
+        return type(value).__name__
     else:
         return f"{value:.2f}"
 

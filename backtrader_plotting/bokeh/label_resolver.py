@@ -18,6 +18,9 @@ def datatarget2label(datas: List[Union[bt.AbstractDataBase, bt.Indicator]]):
     for d in datas:
         if isinstance(d, bt.Indicator):
             labels.append(indicator2label(d))
+        elif isinstance(d, bt.feeds.PandasData):
+            labels.append("Pandas")
+            pass
         elif isinstance(d, bt.AbstractDataBase):
             for n in prim_names:
                 val = getattr(d, n, "")
