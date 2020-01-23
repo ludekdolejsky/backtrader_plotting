@@ -243,7 +243,9 @@ class Bokeh(metaclass=bt.MetaParams):
         strat_figures = []
         for master, slaves in data_graph.items():
             plotorder = getattr(master.plotinfo, 'plotorder', 0)
+            plotaspectration= getattr(master.plotinfo, 'plotaspectratio', self.p.scheme.plot_aspect_ratio)
             figure = Figure(strategy, self._figurepage.cds, hoverc, start, end, self.p.scheme, master, plotorder, len(strategy.datas) > 1)
+            figure.figure.aspect_ratio = plotaspectration
 
             figure.plot(master, strat_clk, None)
 
