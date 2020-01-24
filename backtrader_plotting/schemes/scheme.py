@@ -19,6 +19,7 @@ class Scheme(_BtPlotScheme):
         self.barup_outline = self.barup
         self.bardown_outline = self.bardown
 
+        self.link_crosshairs = False
         self.crosshair_line_color = '#999999'
 
         self.legend_background_color = '#3C3F41'

@@ -11,7 +11,7 @@ from typing import List, Dict, Optional, Union, Tuple
 
 import backtrader as bt
 
-from bokeh.models import ColumnDataSource, Model
+from bokeh.models import ColumnDataSource, Model, CrosshairTool, CustomJS
 from bokeh.models.widgets import Panel, Tabs
 from bokeh.layouts import column, gridplot
 
@@ -271,6 +271,9 @@ class Bokeh(metaclass=bt.MetaParams):
 
         hoverc.apply_hovertips(strat_figures)
 
+        if self.p.scheme.link_crosshairs:
+            self.link_crosshairs(strat_figures)
+
         self._figurepage.figures += strat_figures
 
         # volume graphs
@@ -279,6 +282,47 @@ class Bokeh(metaclass=bt.MetaParams):
             figure = Figure(strategy, self._figurepage.cds, hoverc, start, end, self.p.scheme, v, plotorder, len(strategy.datas) > 1)
             figure.plot_volume(v, strat_clk, 1.0)
             self._figurepage.figures.append(figure)
+
+    # link crosshairs (only for the x-movement)
+    # assumes the figures are vertically aligned
+    def link_crosshairs(self, strat_figures):
+        js_move = '''
+            //console.log('----',cb_data)
+            //console.log("mouse",cb_obj)
+            //console.log("originating cross "+origfigname,origcross.spans.height.computed_location)
+            //console.log("aux cross "+auxfigname,auxcross.spans.height.computed_location);
+            if (cb_obj.x >= auxfig.x_range.start && cb_obj.x <= auxfig.x_range.end) { 
+                auxcross.spans.height.computed_location = cb_obj.sx; 
+            } else {
+                auxcross.spans.height.computed_location = null; 
+            } 
+        '''
+        js_leave = 'cross.spans.height.computed_location = null'
+
+        for j in range(0, len(strat_figures)):
+            for i in range(0, len(strat_figures)):
+                if i==j:
+                    continue
+
+                origfigname = str(strat_figures[j].datas)
+                origfig = strat_figures[j].figure
+                origcross = list(filter(lambda t: isinstance(t, CrosshairTool), origfig.tools))[0]
+
+                auxfigname = str(strat_figures[i].datas)
+                auxfig = strat_figures[i].figure
+                auxcross = list(filter(lambda t: isinstance(t, CrosshairTool), auxfig.tools))[0]
+
+                # if moved on a chart, move the b chart as well
+                origargs = {'origcross': origcross, 'auxcross': auxcross, 'origfig': origfig,
+                            'auxfig': auxfig, 'origfigname': origfigname, 'auxfigname': auxfigname}
+                origfig.js_on_event('mousemove', CustomJS(args=origargs, code=js_move))
+                origfig.js_on_event('mouseleave', CustomJS(args=origargs, code=js_leave))
+
+                # if moved on b chart, move the a chart as well
+                auxargs = {'origcross': auxcross, 'auxcross': origcross, 'origfig': auxfig,
+                           'auxfig': origfig, 'origfigname': auxfigname, 'auxfigname': origfigname}
+                auxfig.js_on_event('mousemove', CustomJS(args=auxargs, code=js_move))
+                auxfig.js_on_event('mouseleave', CustomJS(args=auxargs, code=js_leave))
 
     def plot_and_generate_optmodel(self, obj: Union[bt.Strategy, bt.OptReturn]):
         self._reset()
