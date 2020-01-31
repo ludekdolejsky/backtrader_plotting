@@ -5,3 +5,5 @@ backtrader_plotting.egg-info
 /tests/.pytest_cache
 /.idea
 /.pytest_cache
+.DS_Store
+venv*
